@@ -25,19 +25,36 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Build APK
+      - name: Build APK with Custom App Icon
         run: |
-          npm install -g @capacitor/cli @capacitor/core @capacitor/android
-          mkdir -p www
+          npm install -g @capacitor/cli @capacitor/core @capacitor/android @capacitor/assets
+          mkdir -p www assets
+          
+          # HTML Setup
           cat << 'EOF' > www/index.html
           ${{ github.event.client_payload.html_content || '<h1>MIRRYKAL Web2App Test</h1>' }}
           EOF
+
+          # Package Config
           echo '{"name":"testapp","version":"1.0.0","private":true}' > package.json
-          npm install @capacitor/core @capacitor/android
+          npm install @capacitor/core @capacitor/android @capacitor/assets
+
+          # Decode Base64 Icon if provided
+          if [ -n "${{ github.event.client_payload.icon_base64 }}" ]; then
+            echo "${{ github.event.client_payload.icon_base64 }}" | base64 -d > assets/icon.png
+          else
+            # Default placeholder image if no icon is provided
+            curl -s "https://via.placeholder.com/512.png?text=APP" -o assets/icon.png
+          fi
+
+          # Init Capacitor
           npx cap init "${{ github.event.client_payload.app_name || 'MIRRYKAL_App' }}" "com.test.app" --web-dir www
           npx cap add android
-          
-          # Resolution strategy for duplicate class issues
+
+          # Auto Generate Native Android Icons across all densities
+          npx cap-assets generate --android
+
+          # Kotlin duplicate class conflict resolution
           cat << 'EOF' >> android/build.gradle
 
           subprojects {
