@@ -16,6 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
+// 50MB limit for large ZIP projects and icons
 const upload = multer({ limits: { fileSize: 50 * 1024 * 1024 } });
 
 function makeGitHubRequest(pathUrl, method, payload = null) {
@@ -56,7 +57,7 @@ function makeGitHubRequest(pathUrl, method, payload = null) {
     });
 }
 
-// Build App Route with Custom Icon Processing
+// 1. Dispatch Build
 app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]), async (req, res) => {
     try {
         const { appName, mode, htmlContent, webUrl } = req.body;
@@ -72,7 +73,7 @@ app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]
             finalHtml = `<!DOCTYPE html><html><head><script>window.location.href="${webUrl}";</script></head><body>Redirecting...</body></html>`;
         }
 
-        // Icon conversion to Base64 String
+        // Base64 conversion for Icon
         let iconBase64 = "";
         if (req.files && req.files['icon'] && req.files['icon'][0]) {
             iconBase64 = req.files['icon'][0].buffer.toString('base64');
@@ -104,22 +105,32 @@ app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]
     }
 });
 
+// 2. Check Status for Newest Run
 app.get('/api/check-status', async (req, res) => {
     try {
-        const runsResponse = await makeGitHubRequest(`/repos/${GITHUB_USERNAME}/${REPO_NAME}/actions/runs?per_page=1`, 'GET');
+        const clientStartTime = req.query.startTime;
+        const runsResponse = await makeGitHubRequest(`/repos/${GITHUB_USERNAME}/${REPO_NAME}/actions/runs?per_page=5`, 'GET');
         
-        if (runsResponse.statusCode !== 200 || !runsResponse.data.workflow_runs || runsResponse.data.workflow_runs.length === 0) {
-            return res.json({ status: 'queued', progress: 20, message: 'Waiting for runner instance...' });
+        if (runsResponse.statusCode !== 200 || !runsResponse.data.workflow_runs) {
+            return res.json({ status: 'queued', progress: 15, message: 'Waiting for runner instance...' });
         }
 
-        const latestRun = runsResponse.data.workflow_runs[0];
+        const latestRun = runsResponse.data.workflow_runs.find(run => {
+            if (!clientStartTime) return true;
+            return new Date(run.created_at) >= new Date(clientStartTime);
+        });
+
+        if (!latestRun) {
+            return res.json({ status: 'queued', progress: 20, message: 'Initializing cloud runner instance...' });
+        }
+
         const runStatus = latestRun.status;
         const conclusion = latestRun.conclusion;
 
         if (runStatus === 'queued') {
-            return res.json({ status: 'queued', progress: 30, message: 'Job queued on GitHub runner...' });
+            return res.json({ status: 'queued', progress: 30, message: 'Job queued on runner...' });
         } else if (runStatus === 'in_progress') {
-            return res.json({ status: 'in_progress', progress: 65, message: 'Processing custom Icon & compiling APK...' });
+            return res.json({ status: 'in_progress', progress: 65, message: 'Setting up Icon & Assembling Gradle APK...' });
         } else if (runStatus === 'completed') {
             if (conclusion === 'success') {
                 const releasesRes = await makeGitHubRequest(`/repos/${GITHUB_USERNAME}/${REPO_NAME}/releases/latest`, 'GET');
@@ -138,7 +149,7 @@ app.get('/api/check-status', async (req, res) => {
                     downloadUrl: downloadUrl
                 });
             } else {
-                return res.json({ status: 'completed', conclusion: 'failure', progress: 100, message: 'Build failed during Gradle execution.' });
+                return res.json({ status: 'completed', conclusion: 'failure', progress: 100, message: 'Build failed in Gradle step.' });
             }
         }
     } catch (error) {
