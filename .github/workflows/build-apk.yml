@@ -3,6 +3,7 @@ name: Build Real Android APK
 on:
   repository_dispatch:
     types: [build_apk]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -12,7 +13,7 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'zulu'
 
       - uses: android-actions/setup-android@v3
@@ -26,11 +27,11 @@ jobs:
           npm install -g @capacitor/cli @capacitor/core @capacitor/android
           mkdir -p www
           cat << 'EOF' > www/index.html
-          ${{ github.event.client_payload.html_content }}
+          ${{ github.event.client_payload.html_content || '<h1>MIRRYKAL Web2App Test</h1>' }}
           EOF
           echo '{"name":"testapp","version":"1.0.0","private":true}' > package.json
           npm install @capacitor/core @capacitor/android
-          npx cap init "${{ github.event.client_payload.app_name }}" "com.test.app" --web-dir www
+          npx cap init "${{ github.event.client_payload.app_name || 'MIRRYKAL_App' }}" "com.test.app" --web-dir www
           npx cap add android
           npx cap sync
           cd android
@@ -39,5 +40,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.client_payload.app_name }}-apk
+          name: ${{ github.event.client_payload.app_name || 'app' }}-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
