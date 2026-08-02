@@ -1,0 +1,33 @@
+name: Build Real Android APK
+
+on:
+  repository_dispatch:
+    types: [build_apk]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Java JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Android SDK & Build APK
+        run: |
+          npm install -g @capacitor/cli @capacitor/core
+          mkdir -p www
+          echo "${{ github.event.client_payload.html_content }}" > www/index.html
+          npx cap init "${{ github.event.client_payload.app_name }}" "com.mirrykal.app" --web-dir www
+          npx cap add android
+          cd android && ./gradlew assembleDebug
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.event.client_payload.app_name }}-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
