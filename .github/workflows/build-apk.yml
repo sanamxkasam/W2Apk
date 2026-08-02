@@ -1,7 +1,8 @@
 name: Build Real Android APK
 
 on:
-  workflow_dispatch:
+  repository_dispatch:
+    types: [build_apk]
 
 jobs:
   build:
@@ -24,9 +25,12 @@ jobs:
         run: |
           npm install -g @capacitor/cli @capacitor/core @capacitor/android
           mkdir -p www
-          echo '<h1>Hello World</h1>' > www/index.html
+          cat << 'EOF' > www/index.html
+          ${{ github.event.client_payload.html_content }}
+          EOF
           echo '{"name":"testapp","version":"1.0.0","private":true}' > package.json
-          npx cap init "TestApp" "com.test.app" --web-dir www
+          npm install @capacitor/core @capacitor/android
+          npx cap init "${{ github.event.client_payload.app_name }}" "com.test.app" --web-dir www
           npx cap add android
           npx cap sync
           cd android
@@ -35,5 +39,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: app-debug
+          name: ${{ github.event.client_payload.app_name }}-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
