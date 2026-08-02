@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MIRRYKAL - Web2App Builder Engine</title>
+    <title>Mirrykal Web2Apps - Next Gen Engine</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -30,28 +30,49 @@
 
         .container {
             width: 100%;
-            max-width: 520px;
+            max-width: 580px;
             background: var(--card-bg);
             backdrop-filter: blur(16px);
             border: 1px solid var(--border-color);
             border-radius: 24px;
             padding: 32px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
         }
 
-        .header { text-align: center; margin-bottom: 28px; }
-        .header h1 {
-            font-size: 1.8rem;
+        .hidden { display: none !important; }
+
+        /* Header & Hero Page */
+        .hero { text-align: center; padding: 20px 0; }
+        .hero h1 {
+            font-size: 2.2rem;
             font-weight: 800;
             background: linear-gradient(135deg, #818cf8, #c084fc);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
-        .header p { color: var(--text-muted); font-size: 0.95rem; }
+        .hero p { color: var(--text-muted); font-size: 1rem; line-height: 1.5; margin-bottom: 28px; }
 
+        .btn-main {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+        }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(99, 102, 241, 0.5); }
+
+        /* Form Controls */
         .form-group { margin-bottom: 20px; }
-        label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.88rem; font-weight: 600; color: #cbd5e1; }
+        label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.9rem; font-weight: 600; color: #cbd5e1; }
         
         input, select, textarea {
             width: 100%;
@@ -70,137 +91,243 @@
             box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
         }
 
-        .btn-submit {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-            color: white;
-            border: none;
+        .platform-options { display: flex; gap: 12px; }
+        .platform-btn {
+            flex: 1;
+            padding: 14px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 700;
+            color: #fff;
             cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
-            transition: all 0.3s ease;
-        }
-
-        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(99, 102, 241, 0.5); }
-        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-        /* Stylish Status Card */
-        #statusCard {
-            margin-top: 24px;
-            padding: 20px;
-            border-radius: 16px;
             text-align: center;
-            display: none;
-            animation: fadeIn 0.4s ease-in-out;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .platform-btn.active { border-color: var(--primary); background: rgba(99, 102, 241, 0.2); }
+
+        /* Video & Loading Section */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+        .progress-box { margin: 20px 0; }
+        .progress-bar-bg { width: 100%; height: 12px; background: rgba(15, 23, 42, 0.8); border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); }
+        .progress-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #6366f1, #c084fc); transition: width 0.4s ease; }
+        .progress-stats { display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.85rem; color: var(--text-muted); }
+
+        .console-box {
+            background: #090d16;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            height: 120px;
+            overflow-y: auto;
+            text-align: left;
         }
 
-        .status-building {
-            background: rgba(99, 102, 241, 0.1);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            color: #a5b4fc;
+        /* Footer Branding */
+        .footer {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
         }
-
-        .status-error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
+        .yt-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #ff0000;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 8px;
+            background: rgba(255, 0, 0, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 0, 0, 0.2);
         }
-
-        .loader {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s infinite linear;
-            margin: 0 auto 12px auto;
-        }
-
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <h1><i class="fa-solid fa-cube"></i> MIRRYKAL Engine</h1>
-        <p>Convert HTML Code or Web URLs into Real Android APK</p>
+
+    <!-- PAGE 1: Landing Page -->
+    <div id="landingPage" class="hero">
+        <h1>Mirrykal Web2Apps</h1>
+        <p>Next Gen App Engine — Convert your HTML, Web Links, or ZIP Projects into Real Android APKs seamlessly.</p>
+        <button class="btn-main" onclick="showFormPage()"><i class="fa-solid fa-rocket"></i> Get Started</button>
     </div>
 
-    <form id="buildForm">
-        <div class="form-group">
-            <label><i class="fa-solid fa-mobile-screen-button"></i> App Name</label>
-            <input type="text" id="appName" name="appName" placeholder="e.g. My Custom App" required>
+    <!-- PAGE 2: App Builder Form -->
+    <div id="formPage" class="hidden">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="font-size: 1.4rem; color: #818cf8;">Create Your Application</h2>
         </div>
 
-        <div class="form-group">
-            <label><i class="fa-solid fa-layer-group"></i> Source Type</label>
-            <select id="mode" name="mode" onchange="toggleMode()">
-                <option value="html">Custom HTML Code</option>
-                <option value="url">Website URL Redirect</option>
-            </select>
-        </div>
+        <form id="appForm">
+            <!-- Step 1: App Name -->
+            <div class="form-group">
+                <label><i class="fa-solid fa-signature"></i> 1. App Name</label>
+                <input type="text" id="appName" name="appName" placeholder="Enter App Name" required>
+            </div>
 
-        <div class="form-group" id="htmlGroup">
-            <label><i class="fa-solid fa-code"></i> HTML / CSS / JS Source</label>
-            <textarea id="htmlContent" name="htmlContent" rows="6" placeholder="<h1>Welcome to My App</h1>"></textarea>
-        </div>
+            <!-- Step 2: Source Selection -->
+            <div class="form-group">
+                <label><i class="fa-solid fa-code"></i> 2. Select Source Type</label>
+                <select id="sourceType" name="sourceType" onchange="handleSourceChange()">
+                    <option value="enter_html">Enter HTML Directly</option>
+                    <option value="import_link">Import Website Link</option>
+                    <option value="upload_html">Upload HTML File</option>
+                    <option value="upload_zip">Upload ZIP File</option>
+                </select>
+            </div>
 
-        <div class="form-group" id="urlGroup" style="display: none;">
-            <label><i class="fa-solid fa-link"></i> Website URL</label>
-            <input type="url" id="webUrl" name="webUrl" placeholder="https://yourwebsite.com">
-        </div>
+            <!-- Dynamic Source Inputs -->
+            <div class="form-group" id="inputDirectHtml">
+                <textarea id="htmlContent" name="htmlContent" rows="4" placeholder="<h1>Hello World</h1>"></textarea>
+            </div>
+            <div class="form-group hidden" id="inputImportLink">
+                <input type="url" id="webUrl" name="webUrl" placeholder="https://example.com">
+            </div>
+            <div class="form-group hidden" id="inputUploadHtml">
+                <input type="file" id="htmlFile" accept=".html">
+            </div>
+            <div class="form-group hidden" id="inputUploadZip">
+                <input type="file" id="zipFile" name="zipFile" accept=".zip">
+            </div>
 
-        <button type="submit" id="submitBtn" class="btn-submit">
-            <i class="fa-solid fa-gears"></i> Build Real APK
-        </button>
-    </form>
+            <!-- Step 3: App Icon -->
+            <div class="form-group">
+                <label><i class="fa-solid fa-image"></i> 3. Upload App Icon (Any Size)</label>
+                <input type="file" id="icon" name="icon" accept="image/*">
+            </div>
 
-    <div id="statusCard">
-        <div id="loaderIcon" class="loader"></div>
-        <p id="statusMsg" style="font-size: 0.95rem; font-weight: 600;"></p>
+            <!-- Step 4: Platform Selection -->
+            <div class="form-group">
+                <label><i class="fa-solid fa-mobile"></i> 4. Select Platform</label>
+                <div class="platform-options">
+                    <div class="platform-btn active" id="btnAndroid" onclick="selectPlatform('android')">
+                        <i class="fa-brands fa-android"></i> Android
+                    </div>
+                    <div class="platform-btn" id="btnIos" onclick="selectPlatform('ios')">
+                        <i class="fa-brands fa-apple"></i> iOS
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-main"><i class="fa-solid fa-gears"></i> Create App</button>
+        </form>
     </div>
+
+    <!-- PAGE 3: Loading & Video Console -->
+    <div id="loadingPage" class="hidden">
+        <!-- Autoplay Video Player -->
+        <div class="video-container">
+            <iframe id="ytPlayer" src="https://www.youtube.com/embed/n2YesyR-JvA?autoplay=1&enablejsapi=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+
+        <div class="progress-box">
+            <div class="progress-bar-bg">
+                <div id="progressFill" class="progress-bar-fill"></div>
+            </div>
+            <div class="progress-stats">
+                <span id="statusText">Initializing Engine...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+        </div>
+
+        <div class="console-box" id="consoleBox">
+            [System] Engine initialized.<br>
+            [System] Waiting for build dispatch...
+        </div>
+    </div>
+
+    <!-- Footer Branding -->
+    <div class="footer">
+        <p>Made by <strong>Mirrykal</strong> | Designed by <strong>Arun Kumar</strong></p>
+        <a href="https://youtube.com/@mirrykal" target="_blank" class="yt-link">
+            <i class="fa-brands fa-youtube"></i> youtube.com/@mirrykal
+        </a>
+    </div>
+
 </div>
 
 <script>
-    function toggleMode() {
-        const mode = document.getElementById('mode').value;
-        if (mode === 'html') {
-            document.getElementById('htmlGroup').style.display = 'block';
-            document.getElementById('urlGroup').style.display = 'none';
-        } else {
-            document.getElementById('htmlGroup').style.display = 'none';
-            document.getElementById('urlGroup').style.display = 'block';
-        }
+    let selectedPlatform = 'android';
+
+    function showFormPage() {
+        document.getElementById('landingPage').classList.add('hidden');
+        document.getElementById('formPage').classList.remove('hidden');
     }
 
-    document.getElementById('buildForm').addEventListener('submit', async (e) => {
+    function selectPlatform(platform) {
+        selectedPlatform = platform;
+        document.getElementById('btnAndroid').classList.toggle('active', platform === 'android');
+        document.getElementById('btnIos').classList.toggle('active', platform === 'ios');
+    }
+
+    function handleSourceChange() {
+        const type = document.getElementById('sourceType').value;
+        document.getElementById('inputDirectHtml').classList.add('hidden');
+        document.getElementById('inputImportLink').classList.add('hidden');
+        document.getElementById('inputUploadHtml').classList.add('hidden');
+        document.getElementById('inputUploadZip').classList.add('hidden');
+
+        if (type === 'enter_html') document.getElementById('inputDirectHtml').classList.remove('hidden');
+        if (type === 'import_link') document.getElementById('inputImportLink').classList.remove('hidden');
+        if (type === 'upload_html') document.getElementById('inputUploadHtml').classList.remove('hidden');
+        if (type === 'upload_zip') document.getElementById('inputUploadZip').classList.remove('hidden');
+    }
+
+    function logConsole(msg) {
+        const box = document.getElementById('consoleBox');
+        box.innerHTML += `<br>${msg}`;
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function updateProgress(percent, text) {
+        document.getElementById('progressFill').style.width = percent + '%';
+        document.getElementById('progressPercent').innerText = percent + '%';
+        if (text) document.getElementById('statusText').innerText = text;
+    }
+
+    document.getElementById('appForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const submitBtn = document.getElementById('submitBtn');
-        const statusCard = document.getElementById('statusCard');
-        const statusMsg = document.getElementById('statusMsg');
-        const loaderIcon = document.getElementById('loaderIcon');
+        document.getElementById('formPage').classList.add('hidden');
+        document.getElementById('loadingPage').classList.remove('hidden');
 
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
-
-        statusCard.style.display = 'block';
-        statusCard.className = 'status-building';
-        loaderIcon.style.display = 'block';
-        statusMsg.innerText = "Building Engine Triggered! Generating APK in background...";
+        updateProgress(15, "Connecting to Engine...");
+        logConsole("[Network] Connecting to Render backend API...");
 
         const formData = new FormData(e.target);
+        formData.append('platform', selectedPlatform);
+
+        // Adjust HTML content mode mapping for backend
+        const sourceType = document.getElementById('sourceType').value;
+        if (sourceType === 'import_link') {
+            formData.append('mode', 'url');
+        } else {
+            formData.append('mode', 'html');
+        }
 
         try {
+            updateProgress(35, "Packaging assets...");
+            logConsole("[Build] Compiling project source and icon asset...");
+
             const response = await fetch('/api/build-app', {
                 method: 'POST',
                 body: formData
@@ -209,20 +336,30 @@
             const data = await response.json();
 
             if (data.success) {
-                statusMsg.innerText = "Build Successfully Triggered! Your APK is compiling in the pipeline.";
+                updateProgress(65, "Triggering Cloud Pipeline...");
+                logConsole("[GitHub] Dispatching build event to cloud runner...");
+
+                // Simulate realistic build progress steps
+                setTimeout(() => {
+                    updateProgress(85, "Compiling Native Android Gradle...");
+                    logConsole("[Gradle] Assembling APK resources & Capacitor sync...");
+                }, 4000);
+
+                setTimeout(() => {
+                    updateProgress(100, "Build Queued Successfully!");
+                    logConsole("[Success] Process dispatched successfully!");
+                    logConsole("[Status] Running live in background. Check your GitHub Actions tab.");
+                }, 8000);
+
             } else {
-                loaderIcon.style.display = 'none';
-                statusCard.className = 'status-error';
-                statusMsg.innerText = "Error: " + data.message;
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fa-solid fa-gears"></i> Build Real APK';
+                updateProgress(100, "Build Failed");
+                document.getElementById('progressFill').style.background = '#ef4444';
+                logConsole(`[ERROR] ${data.message}`);
             }
         } catch (err) {
-            loaderIcon.style.display = 'none';
-            statusCard.className = 'status-error';
-            statusMsg.innerText = "Connection Failed: " + err.message;
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fa-solid fa-gears"></i> Build Real APK';
+            updateProgress(100, "Server Error");
+            document.getElementById('progressFill').style.background = '#ef4444';
+            logConsole(`[CRITICAL] Connection failed: ${err.message}`);
         }
     });
 </script>
