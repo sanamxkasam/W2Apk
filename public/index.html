@@ -3,186 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MIRRYKAL (Web2Apps)</title>
+    <title>MIRRYKAL - Web2App Builder Engine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --bg: #060913;
-            --card: #0f172a;
-            --accent: #00f2fe;
-            --gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #6b11ff 100%);
-            --text: #f8fafc;
-            --sub: #94a3b8;
-            --border: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
-
-        .hero { text-align: center; padding: 60px 20px 40px 20px; }
-        .logo-title {
-            font-size: 2.8rem; font-weight: 900; letter-spacing: 2px;
-            background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(0, 242, 254, 0.3); margin-bottom: 8px;
-        }
-        .tagline { color: var(--sub); font-size: 1rem; margin-bottom: 24px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
         
-        .start-btn {
-            background: var(--gradient); color: white; border: none; padding: 14px 32px;
-            border-radius: 30px; font-weight: 700; font-size: 1rem; cursor: pointer;
-            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4); transition: transform 0.2s;
-        }
-        .start-btn:active { transform: scale(0.95); }
-
-        .app-box { max-width: 500px; margin: 0 auto 50px auto; padding: 0 20px; display: none; }
-        .card { background: var(--card); border: 1px solid var(--border); padding: 24px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
-
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 12px; }
-        .tab { flex: 1; text-align: center; padding: 10px; font-size: 0.82rem; font-weight: 600; color: var(--sub); border-radius: 8px; cursor: pointer; }
-        .tab.active { background: rgba(255,255,255,0.08); color: var(--accent); }
-
-        .form-group { margin-bottom: 16px; }
-        label { display: block; font-size: 0.85rem; color: var(--sub); margin-bottom: 6px; font-weight: 600; }
-        input[type="text"], input[type="url"], textarea, select {
-            width: 100%; background: #060913; border: 1px solid var(--border); color: #fff;
-            padding: 12px; border-radius: 10px; font-size: 0.9rem; outline: none;
-        }
-        input[type="file"] { color: var(--sub); font-size: 0.85rem; }
-
-        .next-btn {
-            width: 100%; background: var(--gradient); border: none; color: white; padding: 14px;
-            border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 10px;
+        body {
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
 
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg);
-            display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
+        .container {
+            width: 100%;
+            max-width: 520px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        .spinner { width: 50px; height: 50px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .status-text { margin-top: 20px; font-weight: 600; font-size: 1.1rem; color: var(--accent); }
-        .dl-btn { background: #10b981; color: white; text-decoration: none; padding: 14px 28px; border-radius: 12px; font-weight: 700; margin-top: 20px; display: none; }
+
+        .header { text-align: center; margin-bottom: 28px; }
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .header p { color: var(--text-muted); font-size: 0.95rem; }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.88rem; font-weight: 600; color: #cbd5e1; }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(99, 102, 241, 0.5); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        /* Stylish Status Card */
+        #statusCard {
+            margin-top: 24px;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .status-building {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+            margin: 0 auto 12px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div class="hero">
-        <div class="logo-title">MIRRYKAL</div>
-        <div class="tagline">Next-Gen Web2Apps Converter</div>
-        <button class="start-btn" onclick="startFlow()">Get Started</button>
+<div class="container">
+    <div class="header">
+        <h1><i class="fa-solid fa-cube"></i> MIRRYKAL Engine</h1>
+        <p>Convert HTML Code or Web URLs into Real Android APK</p>
     </div>
 
-    <div class="app-box" id="formBox">
-        <div class="card">
-            <div class="tabs">
-                <div class="tab active" onclick="setMode('html', this)">Input HTML</div>
-                <div class="tab" onclick="setMode('zip', this)">Import ZIP</div>
-                <div class="tab" onclick="setMode('url', this)">Import Link</div>
-            </div>
-
-            <form id="buildForm">
-                <input type="hidden" id="selectedMode" value="html">
-
-                <div id="modeHtml" class="form-group">
-                    <label>Paste HTML Code</label>
-                    <textarea id="htmlContent" rows="4" placeholder="<h1>Hello World</h1>"></textarea>
-                </div>
-
-                <div id="modeZip" class="form-group" style="display:none;">
-                    <label>Upload HTML or ZIP File</label>
-                    <input type="file" id="zipFile" accept=".zip,.html">
-                </div>
-
-                <div id="modeUrl" class="form-group" style="display:none;">
-                    <label>Website URL</label>
-                    <input type="url" id="webUrl" placeholder="https://example.com">
-                </div>
-
-                <div class="form-group">
-                    <label>App Name</label>
-                    <input type="text" id="appName" placeholder="My Awesome App" required>
-                </div>
-
-                <div class="form-group">
-                    <label>App Icon (Any Size / Format)</label>
-                    <input type="file" id="iconFile" accept="image/*">
-                </div>
-
-                <div class="form-group">
-                    <label>Platform</label>
-                    <select id="platform">
-                        <option value="android">Android (.APK)</option>
-                        <option value="ios">iOS Web App (.IPA)</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="next-btn">Next &gt;&gt;</button>
-            </form>
+    <form id="buildForm">
+        <div class="form-group">
+            <label><i class="fa-solid fa-mobile-screen-button"></i> App Name</label>
+            <input type="text" id="appName" name="appName" placeholder="e.g. My Custom App" required>
         </div>
+
+        <div class="form-group">
+            <label><i class="fa-solid fa-layer-group"></i> Source Type</label>
+            <select id="mode" name="mode" onchange="toggleMode()">
+                <option value="html">Custom HTML Code</option>
+                <option value="url">Website URL Redirect</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="htmlGroup">
+            <label><i class="fa-solid fa-code"></i> HTML / CSS / JS Source</label>
+            <textarea id="htmlContent" name="htmlContent" rows="6" placeholder="<h1>Welcome to My App</h1>"></textarea>
+        </div>
+
+        <div class="form-group" id="urlGroup" style="display: none;">
+            <label><i class="fa-solid fa-link"></i> Website URL</label>
+            <input type="url" id="webUrl" name="webUrl" placeholder="https://yourwebsite.com">
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn-submit">
+            <i class="fa-solid fa-gears"></i> Build Real APK
+        </button>
+    </form>
+
+    <div id="statusCard">
+        <div id="loaderIcon" class="loader"></div>
+        <p id="statusMsg" style="font-size: 0.95rem; font-weight: 600;"></p>
     </div>
+</div>
 
-    <div class="modal" id="processModal">
-        <div class="spinner" id="loader"></div>
-        <div class="status-text" id="statusText">Resizing Icon & Processing Files...</div>
-        <a href="#" class="dl-btn" id="dlBtn">Download APK Now</a>
-    </div>
-
-    <script>
-        function startFlow() {
-            document.getElementById('formBox').style.display = 'block';
-            window.scrollTo({ top: document.getElementById('formBox').offsetTop - 20, behavior: 'smooth' });
+<script>
+    function toggleMode() {
+        const mode = document.getElementById('mode').value;
+        if (mode === 'html') {
+            document.getElementById('htmlGroup').style.display = 'block';
+            document.getElementById('urlGroup').style.display = 'none';
+        } else {
+            document.getElementById('htmlGroup').style.display = 'none';
+            document.getElementById('urlGroup').style.display = 'block';
         }
+    }
 
-        function setMode(mode, tabElem) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            tabElem.classList.add('active');
-            document.getElementById('selectedMode').value = mode;
+    document.getElementById('buildForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-            document.getElementById('modeHtml').style.display = mode === 'html' ? 'block' : 'none';
-            document.getElementById('modeZip').style.display = mode === 'zip' ? 'block' : 'none';
-            document.getElementById('modeUrl').style.display = mode === 'url' ? 'block' : 'none';
-        }
+        const submitBtn = document.getElementById('submitBtn');
+        const statusCard = document.getElementById('statusCard');
+        const statusMsg = document.getElementById('statusMsg');
+        const loaderIcon = document.getElementById('loaderIcon');
 
-        document.getElementById('buildForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const modal = document.getElementById('processModal');
-            const statusText = document.getElementById('statusText');
-            const loader = document.getElementById('loader');
-            const dlBtn = document.getElementById('dlBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
 
-            modal.style.display = 'flex';
-            statusText.innerText = "Processing & Compiling App...";
-            loader.style.display = 'block';
-            dlBtn.style.display = 'none';
+        statusCard.style.display = 'block';
+        statusCard.className = 'status-building';
+        loaderIcon.style.display = 'block';
+        statusMsg.innerText = "Building Engine Triggered! Generating APK in background...";
 
-            const formData = new FormData();
-            formData.append('mode', document.getElementById('selectedMode').value);
-            formData.append('appName', document.getElementById('appName').value);
-            formData.append('platform', document.getElementById('platform').value);
-            formData.append('htmlContent', document.getElementById('htmlContent').value);
-            formData.append('webUrl', document.getElementById('webUrl').value);
+        const formData = new FormData(e.target);
 
-            const iconFile = document.getElementById('iconFile').files[0];
-            if(iconFile) formData.append('icon', iconFile);
+        try {
+            const response = await fetch('/api/build-app', {
+                method: 'POST',
+                body: formData
+            });
 
-            const zipFile = document.getElementById('zipFile').files[0];
-            if(zipFile) formData.append('zipFile', zipFile);
+            const data = await response.json();
 
-            try {
-                const res = await fetch('/api/build-app', { method: 'POST', body: formData });
-                const data = await res.json();
-
-                if (data.success) {
-                    statusText.innerText = "Done! Your App is Ready.";
-                    loader.style.display = 'none';
-                    dlBtn.href = data.downloadUrl;
-                    dlBtn.style.display = 'inline-block';
-                } else {
-                    statusText.innerText = "Error: " + data.message;
-                }
-            } catch (err) {
-                statusText.innerText = "Server Connection Failed!";
+            if (data.success) {
+                statusMsg.innerText = "Build Successfully Triggered! Your APK is compiling in the pipeline.";
+            } else {
+                loaderIcon.style.display = 'none';
+                statusCard.className = 'status-error';
+                statusMsg.innerText = "Error: " + data.message;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-gears"></i> Build Real APK';
             }
-        });
-    </script>
+        } catch (err) {
+            loaderIcon.style.display = 'none';
+            statusCard.className = 'status-error';
+            statusMsg.innerText = "Connection Failed: " + err.message;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-gears"></i> Build Real APK';
+        }
+    });
+</script>
+
 </body>
 </html>
