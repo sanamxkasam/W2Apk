@@ -8,6 +8,11 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Configs (Inko apni GitHub details se replace karein)
+const GITHUB_USERNAME = 'YOUR_GITHUB_USERNAME'; // Apna GitHub username daalein
+const REPO_NAME = 'W2Apk';                      // Apni repo ka naam
+const GITHUB_TOKEN = 'YOUR_GITHUB_PAT_TOKEN';   // GitHub Personal Access Token
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -22,58 +27,55 @@ if (!fs.existsSync(buildDir)) fs.mkdirSync(buildDir);
 const storage = multer.memoryStorage();
 const upload = multer({ limits: { fileSize: 25 * 1024 * 1024 } }); // 25MB Max
 
-// API Route for App Building
+// API Route for Real App Building via GitHub Actions Engine
 app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]), async (req, res) => {
     try {
         const { appName, mode, htmlContent, webUrl, platform } = req.body;
-        const buildId = 'app_' + Date.now();
-        const currentAppDir = path.join(buildDir, buildId);
-        fs.mkdirSync(currentAppDir);
 
-        // 1. Process Icon (Auto Resize any size/format to 512x512 PNG under 256KB)
-        let processedIconPath = null;
-        if (req.files && req.files.icon) {
-            processedIconPath = path.join(currentAppDir, 'icon.png');
-            await sharp(req.files.icon[0].buffer)
-                .resize(512, 512, { fit: 'cover' })
-                .png({ quality: 80 })
-                .toFile(processedIconPath);
+        // 1. Prepare HTML Content based on Mode
+        let finalHtml = '<h1>MIRRYKAL Web2App</h1>';
+        if (mode === 'html' && htmlContent) {
+            finalHtml = htmlContent;
+        } else if (mode === 'url' && webUrl) {
+            finalHtml = `<!DOCTYPE html><html><head><script>window.location.href="${webUrl}";</script></head><body>Redirecting...</body></html>`;
         }
 
-        // 2. Process Input Modes
-        if (mode === 'html') {
-            fs.writeFileSync(path.join(currentAppDir, 'index.html'), htmlContent || '<h1>MIRRYKAL Web2App</h1>');
-        } else if (mode === 'zip' && req.files.zipFile) {
-            fs.writeFileSync(path.join(currentAppDir, 'source.zip'), req.files.zipFile[0].buffer);
-        } else if (mode === 'url') {
-            const redirectHtml = `<!DOCTYPE html><html><head><script>window.location.href="${webUrl}";</script></head><body>Redirecting...</body></html>`;
-            fs.writeFileSync(path.join(currentAppDir, 'index.html'), redirectHtml);
-        }
-
-        // 3. Create Binary Bundle Asset File
-        const cleanName = (appName || 'My_App').replace(/\s+/g, '_');
-        const dummyApkPath = path.join(currentAppDir, `${cleanName}.apk`);
-        fs.writeFileSync(dummyApkPath, `MIRRYKAL Web2Apps Binary Bundle for ${appName}`);
-
-        res.json({
-            success: true,
-            message: "Build Completed Successfully!",
-            downloadUrl: `/download/${buildId}/${cleanName}.apk`
+        // 2. Trigger GitHub Actions Workflow via API
+        const githubResponse = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/dispatches`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'MIRRYKAL-App'
+            },
+            body: JSON.stringify({
+                event_type: 'build_apk',
+                client_payload: {
+                    app_name: appName || 'My_App',
+                    html_content: finalHtml
+                }
+            })
         });
 
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: "Build process failed on server." });
-    }
-});
+        if (githubResponse.status === 204) {
+            // Workflow triggered successfully
+            res.json({
+                success: true,
+                message: "Real APK Compilation Triggered Successfully on GitHub Engine!",
+                downloadUrl: `https://github.com/${GITHUB_USERNAME}/${REPO_NAME}/actions`
+            });
+        } else {
+            const errData = await githubResponse.json();
+            console.error('GitHub API Error:', errData);
+            res.status(500).json({ 
+                success: false, 
+                message: "Failed to trigger GitHub Builder. Please check GITHUB_TOKEN." 
+            });
+        }
 
-// Download Handler Route
-app.get('/download/:buildId/:fileName', (req, res) => {
-    const filePath = path.join(buildDir, req.params.buildId, req.params.fileName);
-    if (fs.existsSync(filePath)) {
-        res.download(filePath);
-    } else {
-        res.status(404).send('File expired or not found.');
+    } catch (error) {
+        console.error('Server Error:', error);
+        res.status(500).json({ success: false, message: "Build process failed on server." });
     }
 });
 
