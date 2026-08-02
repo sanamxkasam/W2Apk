@@ -5,6 +5,9 @@ on:
     types: [build_apk]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,7 +37,7 @@ jobs:
           npx cap init "${{ github.event.client_payload.app_name || 'MIRRYKAL_App' }}" "com.test.app" --web-dir www
           npx cap add android
           
-          # Kotlin duplicate class conflict resolution
+          # Resolution strategy for duplicate class issues
           cat << 'EOF' >> android/build.gradle
 
           subprojects {
@@ -52,7 +55,11 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - uses: actions/upload-artifact@v4
+      - name: Create Release & Upload Raw APK
+        uses: softprops/action-gh-release@v1
         with:
-          name: ${{ github.event.client_payload.app_name || 'app' }}-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          tag_name: "v1.0.${{ github.run_number }}"
+          name: "${{ github.event.client_payload.app_name || 'MIRRYKAL_App' }} #${{ github.run_number }}"
+          files: android/app/build/outputs/apk/debug/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
