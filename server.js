@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 // Configs (Inko apni GitHub details se replace karein)
 const GITHUB_USERNAME = 'YOUR_GITHUB_USERNAME'; // Apna GitHub username daalein
 const REPO_NAME = 'W2Apk';                      // Apni repo ka naam
-const GITHUB_TOKEN = 'YOUR_GITHUB_PAT_TOKEN';   // GitHub Personal Access Token
+const GITHUB_TOKEN = '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';   // GitHub Personal Access Token
 
 app.use(cors());
 app.use(express.json());
