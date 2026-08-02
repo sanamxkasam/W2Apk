@@ -3,6 +3,7 @@ name: Build Real Android APK
 on:
   repository_dispatch:
     types: [build_apk]
+    workflow_dispatch:
 
 jobs:
   build:
