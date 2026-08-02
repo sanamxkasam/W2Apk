@@ -16,9 +16,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// 50MB limit for large ZIP projects and icons
-const upload = multer({ limits: { fileSize: 50 * 1024 * 1024 } });
+const upload = multer({ limits: { fileSize: 25 * 1024 * 1024 } });
 
+// Helper function for GitHub API Requests
 function makeGitHubRequest(pathUrl, method, payload = null) {
     return new Promise((resolve, reject) => {
         const options = {
@@ -73,29 +73,24 @@ app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]
             finalHtml = `<!DOCTYPE html><html><head><script>window.location.href="${webUrl}";</script></head><body>Redirecting...</body></html>`;
         }
 
-        // Base64 conversion for Icon
-        let iconBase64 = "";
-        if (req.files && req.files['icon'] && req.files['icon'][0]) {
-            iconBase64 = req.files['icon'][0].buffer.toString('base64');
-        }
-
         const cleanAppName = (appName || 'My_App').replace(/[^a-zA-Z0-9_]/g, '_');
         const payload = JSON.stringify({
             event_type: 'build_apk',
             client_payload: {
                 app_name: cleanAppName,
-                html_content: finalHtml,
-                icon_base64: iconBase64
+                html_content: finalHtml
             }
         });
 
+        const startTime = new Date().toISOString();
         const response = await makeGitHubRequest(`/repos/${GITHUB_USERNAME}/${REPO_NAME}/dispatches`, 'POST', payload);
 
         if (response.statusCode === 204) {
             return res.json({
                 success: true,
                 message: "Build triggered successfully!",
-                appName: cleanAppName
+                appName: cleanAppName,
+                startTime: startTime
             });
         } else {
             return res.status(500).json({ success: false, message: "Failed to dispatch build event." });
@@ -105,34 +100,26 @@ app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]
     }
 });
 
-// 2. Check Status for Newest Run
+// 2. Poll Build Status & Get Direct APK Link
 app.get('/api/check-status', async (req, res) => {
     try {
-        const clientStartTime = req.query.startTime;
-        const runsResponse = await makeGitHubRequest(`/repos/${GITHUB_USERNAME}/${REPO_NAME}/actions/runs?per_page=5`, 'GET');
+        const runsResponse = await makeGitHubRequest(`/repos/${GITHUB_USERNAME}/${REPO_NAME}/actions/runs?per_page=1`, 'GET');
         
-        if (runsResponse.statusCode !== 200 || !runsResponse.data.workflow_runs) {
-            return res.json({ status: 'queued', progress: 15, message: 'Waiting for runner instance...' });
+        if (runsResponse.statusCode !== 200 || !runsResponse.data.workflow_runs || runsResponse.data.workflow_runs.length === 0) {
+            return res.json({ status: 'queued', progress: 20, message: 'Waiting for runner instance...' });
         }
 
-        const latestRun = runsResponse.data.workflow_runs.find(run => {
-            if (!clientStartTime) return true;
-            return new Date(run.created_at) >= new Date(clientStartTime);
-        });
-
-        if (!latestRun) {
-            return res.json({ status: 'queued', progress: 20, message: 'Initializing cloud runner instance...' });
-        }
-
-        const runStatus = latestRun.status;
-        const conclusion = latestRun.conclusion;
+        const latestRun = runsResponse.data.workflow_runs[0];
+        const runStatus = latestRun.status; // queued, in_progress, completed
+        const conclusion = latestRun.conclusion; // success, failure, cancelled
 
         if (runStatus === 'queued') {
-            return res.json({ status: 'queued', progress: 30, message: 'Job queued on runner...' });
+            return res.json({ status: 'queued', progress: 30, message: 'Job queued on GitHub runner...' });
         } else if (runStatus === 'in_progress') {
-            return res.json({ status: 'in_progress', progress: 65, message: 'Setting up Icon & Assembling Gradle APK...' });
+            return res.json({ status: 'in_progress', progress: 65, message: 'Compiling Java & Assembling Gradle APK...' });
         } else if (runStatus === 'completed') {
             if (conclusion === 'success') {
+                // Fetch direct APK from Releases API
                 const releasesRes = await makeGitHubRequest(`/repos/${GITHUB_USERNAME}/${REPO_NAME}/releases/latest`, 'GET');
                 let downloadUrl = null;
 
@@ -149,7 +136,7 @@ app.get('/api/check-status', async (req, res) => {
                     downloadUrl: downloadUrl
                 });
             } else {
-                return res.json({ status: 'completed', conclusion: 'failure', progress: 100, message: 'Build failed in Gradle step.' });
+                return res.json({ status: 'completed', conclusion: 'failure', progress: 100, message: 'Build failed during Gradle execution.' });
             }
         }
     } catch (error) {
