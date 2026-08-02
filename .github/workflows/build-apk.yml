@@ -25,35 +25,19 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Build APK with Custom App Icon
+      - name: Build APK
         run: |
           npm install -g @capacitor/cli @capacitor/core @capacitor/android
           mkdir -p www
-          
-          # HTML Setup
           cat << 'EOF' > www/index.html
           ${{ github.event.client_payload.html_content || '<h1>MIRRYKAL Web2App Test</h1>' }}
           EOF
-
-          # Package Config
           echo '{"name":"testapp","version":"1.0.0","private":true}' > package.json
           npm install @capacitor/core @capacitor/android
-
-          # Init Capacitor
           npx cap init "${{ github.event.client_payload.app_name || 'MIRRYKAL_App' }}" "com.test.app" --web-dir www
           npx cap add android
-
-          # Decode Base64 Custom Icon into Android Resources (Timeout Free & Native)
-          if [ -n "${{ github.event.client_payload.icon_base64 }}" ]; then
-            mkdir -p android/app/src/main/res/drawable
-            echo "${{ github.event.client_payload.icon_base64 }}" | base64 -d > android/app/src/main/res/drawable/custom_icon.png
-            
-            # Update Android Manifest to point to custom_icon
-            sed -i 's|android:icon="@mipmap/ic_launcher"|android:icon="@drawable/custom_icon"|g' android/app/src/main/AndroidManifest.xml
-            sed -i 's|android:roundIcon="@mipmap/ic_launcher_round"|android:roundIcon="@drawable/custom_icon"|g' android/app/src/main/AndroidManifest.xml
-          fi
-
-          # Resolution strategy for duplicate class issues (Kotlin stdlib)
+          
+          # Resolution strategy for duplicate class issues
           cat << 'EOF' >> android/build.gradle
 
           subprojects {
