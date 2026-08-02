@@ -13,7 +13,7 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: '17'
           distribution: 'zulu'
 
       - uses: android-actions/setup-android@v3
@@ -33,6 +33,20 @@ jobs:
           npm install @capacitor/core @capacitor/android
           npx cap init "${{ github.event.client_payload.app_name || 'MIRRYKAL_App' }}" "com.test.app" --web-dir www
           npx cap add android
+          
+          # Kotlin duplicate class conflict resolution
+          cat << 'EOF' >> android/build.gradle
+
+          subprojects {
+              configurations.all {
+                  resolutionStrategy {
+                      exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk7"
+                      exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk8"
+                  }
+              }
+          }
+          EOF
+
           npx cap sync
           cd android
           chmod +x gradlew
