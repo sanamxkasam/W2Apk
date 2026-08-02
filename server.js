@@ -27,7 +27,7 @@ app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]
         if (!GITHUB_TOKEN) {
             return res.status(500).json({
                 success: false,
-                message: "GITHUB_TOKEN missing in Render Environment Variables!"
+                message: "Server Configuration Error."
             });
         }
 
@@ -65,15 +65,15 @@ app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]
             githubRes.on('data', (chunk) => body += chunk);
             githubRes.on('end', () => {
                 if (githubRes.statusCode === 204) {
+                    // GitHub link hata diya hai — User ko bas Success/Building message dikhega
                     return res.json({
                         success: true,
-                        message: "Build Triggered Successfully!",
-                        downloadUrl: `https://github.com/${GITHUB_USERNAME}/${REPO_NAME}/actions`
+                        message: "Your APK build is in progress! Please wait while the engine generates your app."
                     });
                 } else {
                     return res.status(500).json({
                         success: false,
-                        message: `GitHub Error (${githubRes.statusCode}): ${body}`
+                        message: "Failed to initialize build pipeline."
                     });
                 }
             });
@@ -82,7 +82,7 @@ app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]
         githubReq.on('error', (err) => {
             return res.status(500).json({
                 success: false,
-                message: "GitHub Request Failed: " + err.message
+                message: "Server connection error."
             });
         });
 
@@ -92,7 +92,7 @@ app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: "Server Crash: " + error.message
+            message: "Internal server error."
         });
     }
 });
