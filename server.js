@@ -27,7 +27,7 @@ app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]
         if (!GITHUB_TOKEN) {
             return res.status(500).json({
                 success: false,
-                message: "Server Configuration Error."
+                message: "Server configuration error: GITHUB_TOKEN is missing."
             });
         }
 
@@ -65,15 +65,14 @@ app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]
             githubRes.on('data', (chunk) => body += chunk);
             githubRes.on('end', () => {
                 if (githubRes.statusCode === 204) {
-                    // GitHub link hata diya hai — User ko bas Success/Building message dikhega
                     return res.json({
                         success: true,
-                        message: "Your APK build is in progress! Please wait while the engine generates your app."
+                        message: "Build triggered successfully! Your APK generation is in progress."
                     });
                 } else {
                     return res.status(500).json({
                         success: false,
-                        message: "Failed to initialize build pipeline."
+                        message: `GitHub Trigger Error (${githubRes.statusCode}): ${body}`
                     });
                 }
             });
@@ -82,7 +81,7 @@ app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]
         githubReq.on('error', (err) => {
             return res.status(500).json({
                 success: false,
-                message: "Server connection error."
+                message: "Server connection error: " + err.message
             });
         });
 
@@ -92,7 +91,7 @@ app.post('/api/build-app', upload.fields([{ name: 'icon' }, { name: 'zipFile' }]
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: "Internal server error."
+            message: "Internal server error: " + error.message
         });
     }
 });
