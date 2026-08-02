@@ -43,7 +43,6 @@
 
         .hidden { display: none !important; }
 
-        /* Header & Hero Page */
         .hero { text-align: center; padding: 20px 0; }
         .hero h1 {
             font-size: 2.2rem;
@@ -67,10 +66,21 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
         }
         .btn-main:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(99, 102, 241, 0.5); }
 
-        /* Form Controls */
+        .btn-download {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
+            margin-top: 15px;
+        }
+        .btn-download:hover { box-shadow: 0 15px 25px -5px rgba(16, 185, 129, 0.5); }
+
         .form-group { margin-bottom: 20px; }
         label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.9rem; font-weight: 600; color: #cbd5e1; }
         
@@ -106,7 +116,6 @@
         }
         .platform-btn.active { border-color: var(--primary); background: rgba(99, 102, 241, 0.2); }
 
-        /* Video & Loading Section */
         .video-container {
             position: relative;
             padding-bottom: 56.25%;
@@ -136,7 +145,6 @@
             text-align: left;
         }
 
-        /* Footer Branding */
         .footer {
             margin-top: 28px;
             padding-top: 20px;
@@ -178,13 +186,11 @@
         </div>
 
         <form id="appForm">
-            <!-- Step 1: App Name -->
             <div class="form-group">
                 <label><i class="fa-solid fa-signature"></i> 1. App Name</label>
                 <input type="text" id="appName" name="appName" placeholder="Enter App Name" required>
             </div>
 
-            <!-- Step 2: Source Selection -->
             <div class="form-group">
                 <label><i class="fa-solid fa-code"></i> 2. Select Source Type</label>
                 <select id="sourceType" name="sourceType" onchange="handleSourceChange()">
@@ -195,7 +201,6 @@
                 </select>
             </div>
 
-            <!-- Dynamic Source Inputs -->
             <div class="form-group" id="inputDirectHtml">
                 <textarea id="htmlContent" name="htmlContent" rows="4" placeholder="<h1>Hello World</h1>"></textarea>
             </div>
@@ -209,13 +214,11 @@
                 <input type="file" id="zipFile" name="zipFile" accept=".zip">
             </div>
 
-            <!-- Step 3: App Icon -->
             <div class="form-group">
                 <label><i class="fa-solid fa-image"></i> 3. Upload App Icon (Any Size)</label>
                 <input type="file" id="icon" name="icon" accept="image/*">
             </div>
 
-            <!-- Step 4: Platform Selection -->
             <div class="form-group">
                 <label><i class="fa-solid fa-mobile"></i> 4. Select Platform</label>
                 <div class="platform-options">
@@ -234,9 +237,8 @@
 
     <!-- PAGE 3: Loading & Video Console -->
     <div id="loadingPage" class="hidden">
-        <!-- Autoplay Video Player -->
-        <div class="video-container">
-            <iframe id="ytPlayer" src="https://www.youtube.com/embed/n2YesyR-JvA?autoplay=1&enablejsapi=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        <div class="video-container" id="videoBox">
+            <!-- Video Iframe dynamically loaded here on click -->
         </div>
 
         <div class="progress-box">
@@ -251,11 +253,16 @@
 
         <div class="console-box" id="consoleBox">
             [System] Engine initialized.<br>
-            [System] Waiting for build dispatch...
+            [System] Dispatching request to cloud worker...
+        </div>
+
+        <div id="downloadArea" class="hidden">
+            <a id="downloadBtn" href="#" class="btn-main btn-download" download>
+                <i class="fa-solid fa-download"></i> Download Real APK File
+            </a>
         </div>
     </div>
 
-    <!-- Footer Branding -->
     <div class="footer">
         <p>Made by <strong>Mirrykal</strong> | Designed by <strong>Arun Kumar</strong></p>
         <a href="https://youtube.com/@mirrykal" target="_blank" class="yt-link">
@@ -267,6 +274,7 @@
 
 <script>
     let selectedPlatform = 'android';
+    let pollInterval = null;
 
     function showFormPage() {
         document.getElementById('landingPage').classList.add('hidden');
@@ -304,30 +312,68 @@
         if (text) document.getElementById('statusText').innerText = text;
     }
 
+    function startVideo() {
+        const videoBox = document.getElementById('videoBox');
+        videoBox.innerHTML = `<iframe id="ytPlayer" src="https://www.youtube.com/embed/n2YesyR-JvA?autoplay=1&enablejsapi=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    }
+
+    function startRealTimePolling() {
+        pollInterval = setInterval(async () => {
+            try {
+                const res = await fetch('/api/check-status');
+                const data = await res.json();
+
+                if (data.status === 'queued') {
+                    updateProgress(25, "Queued on Cloud Runner...");
+                    logConsole("[Cloud] Runner initializing environment...");
+                } else if (data.status === 'in_progress') {
+                    updateProgress(65, "Building Android APK...");
+                    logConsole("[Gradle] Compiling Java sources & linking Capacitor...");
+                } else if (data.status === 'completed') {
+                    clearInterval(pollInterval);
+                    if (data.conclusion === 'success') {
+                        updateProgress(100, "Build Finished Successfully!");
+                        logConsole("[Success] APK generated & published to Release!");
+
+                        if (data.downloadUrl) {
+                            const downloadBtn = document.getElementById('downloadBtn');
+                            downloadBtn.href = data.downloadUrl;
+                            document.getElementById('downloadArea').classList.remove('hidden');
+                            logConsole("[Ready] Direct APK Download Link Ready below.");
+                        } else {
+                            logConsole("[Note] Release ready. Check GitHub Releases tab.");
+                        }
+                    } else {
+                        updateProgress(100, "Build Failed");
+                        document.getElementById('progressFill').style.background = '#ef4444';
+                        logConsole("[Error] Build process failed in cloud.");
+                    }
+                }
+            } catch (e) {
+                console.error("Polling error", e);
+            }
+        }, 5000); // Check every 5s
+    }
+
     document.getElementById('appForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
         document.getElementById('formPage').classList.add('hidden');
         document.getElementById('loadingPage').classList.remove('hidden');
 
-        updateProgress(15, "Connecting to Engine...");
-        logConsole("[Network] Connecting to Render backend API...");
+        // Start video autoplay now
+        startVideo();
+
+        updateProgress(10, "Connecting to Engine...");
+        logConsole("[Network] Dispatching build job to backend...");
 
         const formData = new FormData(e.target);
         formData.append('platform', selectedPlatform);
 
-        // Adjust HTML content mode mapping for backend
         const sourceType = document.getElementById('sourceType').value;
-        if (sourceType === 'import_link') {
-            formData.append('mode', 'url');
-        } else {
-            formData.append('mode', 'html');
-        }
+        formData.append('mode', sourceType === 'import_link' ? 'url' : 'html');
 
         try {
-            updateProgress(35, "Packaging assets...");
-            logConsole("[Build] Compiling project source and icon asset...");
-
             const response = await fetch('/api/build-app', {
                 method: 'POST',
                 body: formData
@@ -336,21 +382,9 @@
             const data = await response.json();
 
             if (data.success) {
-                updateProgress(65, "Triggering Cloud Pipeline...");
-                logConsole("[GitHub] Dispatching build event to cloud runner...");
-
-                // Simulate realistic build progress steps
-                setTimeout(() => {
-                    updateProgress(85, "Compiling Native Android Gradle...");
-                    logConsole("[Gradle] Assembling APK resources & Capacitor sync...");
-                }, 4000);
-
-                setTimeout(() => {
-                    updateProgress(100, "Build Queued Successfully!");
-                    logConsole("[Success] Process dispatched successfully!");
-                    logConsole("[Status] Running live in background. Check your GitHub Actions tab.");
-                }, 8000);
-
+                updateProgress(20, "Build Queued...");
+                logConsole("[GitHub] Dispatch successful. Monitoring live progress...");
+                startRealTimePolling();
             } else {
                 updateProgress(100, "Build Failed");
                 document.getElementById('progressFill').style.background = '#ef4444';
